@@ -1,16 +1,19 @@
 {
-  "name": "TMC5160",
+  "name": "TMC5160-Tiny",
   "keywords": "tmc5160, stepper, motor, trinamic, motion controller",
   "description": "Control Trinamic TMC5160 stepper motor driver with internal motion controller via SPI or UART",
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/tommag/TMC5160_Arduino"
+    "url": "https://github.com/jschneider1207/TMC5160_Tiny"
   },
   "authors":
   [
     {
-      "name": "Tom Magnier",
+      "name": "Tom Magnier"
+    },
+    {
+      "name": "Jess Schneider",
       "maintainer": true
     }
   ],

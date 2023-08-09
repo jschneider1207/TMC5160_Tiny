@@ -24,11 +24,24 @@ SOFTWARE.
 
 #include "TMC5160.h"
 
-TMC5160_SPI::TMC5160_SPI( uint8_t chipSelectPin, uint32_t fclk, const SPISettings &spiSettings, SPIClass &spi )
-: TMC5160(fclk), _CS(chipSelectPin), _spiSettings(spiSettings), _spi(&spi)
+TMC5160_SPI::TMC5160_SPI(uint8_t cs, bool swapPins, uint32_t fclk, const SPISettings &spiSettings, SPIClass &spi)
+		: TMC5160(fclk), _CS(cs), _spiSettings(spiSettings), _spi(&spi)
 {
+	// Tiny does not automatically configure output SPI pins, required to do it manually
+	if (!swapPins)
+	{
+		pinMode(PIN_PA1, OUTPUT); // MOSI
+		pinMode(PIN_PA3, OUTPUT); // SCK
+	}
+	else
+	{
+		SPI.swap(1);
+		pinMode(PIN_PC2, OUTPUT); // MOSI
+		pinMode(PIN_PC0, OUTPUT); // SCK
+	}
 	pinMode(_CS, OUTPUT);
 	digitalWrite(_CS, HIGH);
+	SPI.begin();
 }
 
 void TMC5160_SPI::_beginTransaction()
@@ -54,12 +67,8 @@ uint32_t TMC5160_SPI::readRegister(uint8_t address)
 	_spi->transfer(0x00);
 	_endTransaction();
 
-	//Delay for the minimum CSN high time (2tclk + 10ns -> 176ns with the default 12MHz clock)
-	#ifdef TEENSYDUINO
-	delayNanoseconds(2 * 1000000000 / _fclk + 10);
-	#else
+	// Delay for the minimum CSN high time (2tclk + 10ns -> 176ns with the default 12MHz clock)
 	delayMicroseconds(1);
-	#endif
 
 	// read it in the second cycle
 	_beginTransaction();
@@ -92,18 +101,17 @@ uint8_t TMC5160_SPI::writeRegister(uint8_t address, uint32_t data)
 	return status;
 }
 
-
 uint8_t TMC5160_SPI::readStatus()
 {
- 	// read general config
- 	_beginTransaction();
- 	uint8_t status = _spi->transfer(TMC5160_Reg::GCONF);
- 	// send dummy data
- 	_spi->transfer(0x00);
- 	_spi->transfer(0x00);
- 	_spi->transfer(0x00);
- 	_spi->transfer(0x00);
- 	_endTransaction();
+	// read general config
+	_beginTransaction();
+	uint8_t status = _spi->transfer(TMC5160_Reg::GCONF);
+	// send dummy data
+	_spi->transfer(0x00);
+	_spi->transfer(0x00);
+	_spi->transfer(0x00);
+	_spi->transfer(0x00);
+	_endTransaction();
 
 	return status;
 }
